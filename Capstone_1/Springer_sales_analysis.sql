@@ -36,6 +36,23 @@ FROM online_sales
 WHERE ShiptoState = 'Texas';
 
 
+
+-- test run
+/*SELECT SUM(ss.Sale_Amount) AS 'Total Revenue for Texas',
+		MIN(ss.Transaction_Date) AS 'Start Date',
+        MAX(ss.Transaction_Date) AS 'End Date'
+FROM store_sales ss
+JOIN store_locations sl
+ON ss.Store_ID = sl.StoreID
+WHERE sl.State = 'Texas'
+UNION ALL
+SELECT SUM(SalesTotal) AS 'Total Online Sales',
+		MIN(Date) AS 'Start Date',
+        MAX(Date) AS 'End Date'
+FROM online_sales
+WHERE ShiptoState = 'Texas';
+*/
+
 -- Revenue breakdown by year and month for Texas
 SELECT CONCAT('$', FORMAT(SUM(ss.Sale_Amount), 2)) AS 'Total Revenue in Texas',
 		date_format(ss.Transaction_Date, '%M, %Y') AS 'Month and Year'
@@ -44,6 +61,7 @@ JOIN store_locations sl
 ON ss.Store_ID = sl.StoreID
 WHERE sl.State = 'Texas'
 GROUP BY date_format(ss.Transaction_Date, '%M, %Y');
+
 
 
 -- Comparison of total revenue for sales territory and the region it belongs to
@@ -56,6 +74,8 @@ WHERE sl.State = 'Texas'
 GROUP BY sl.StoreLocation
 ORDER BY sl.StoreLocation;
 
+
+
 -- What is the number of transactions per month?
 SELECT COUNT(ss.id) AS 'Transactions', 
 	date_format(ss.Transaction_Date, '%M, %Y') AS 'Month and Year'
@@ -63,16 +83,30 @@ FROM store_sales ss
 JOIN store_locations sl
 ON ss.Store_ID = sl.StoreID
 WHERE sl.State = 'Texas'
-GROUP BY date_format(ss.Transaction_Date, '%M, %Y');
+GROUP BY date_format(ss.Transaction_Date, '%M, %Y')
+ORDER BY date_format(ss.Transaction_Date, '%M, %Y');
+
+SELECT COUNT(ss.id) AS 'Transactions', 
+	date_format(ss.Transaction_Date, '%M') AS 'Month'
+FROM store_sales ss
+JOIN store_locations sl
+ON ss.Store_ID = sl.StoreID
+WHERE sl.State = 'Texas'
+GROUP BY date_format(ss.Transaction_Date, '%M')
+ORDER BY date_format(ss.Transaction_Date, '%M');
 
 -- What is the average transaction amount by product category for the sales territory?
-SELECT p.Product AS 'Product', 
+SELECT * FROM inventory_categories;
+SELECT * FROM inventory_subcategories;
+SELECT ic.Category AS 'Product Category', 
 		CAST(AVG(ss.Sale_Amount) AS DECIMAL(10,2)) AS 'Average Transaction Amount'
 FROM store_sales ss
 JOIN products p
 ON ss.Prod_Num = p.ProdNum
-GROUP BY p.Product
-ORDER BY p.Product;
+JOIN inventory_categories ic
+ON p.Categoryid = ic.Categoryid
+GROUP BY ic.Category
+ORDER BY ic.Category;
 
 /*
 SELECT p.Product AS 'Product', 
@@ -87,15 +121,15 @@ ORDER BY p.Product;
 
 -- Can you provide a ranking of in-store sales performance by each store in the sales territory, or a
 -- ranking of online sales performance by state within an online sales territory?
-
+SELECT * FROM management;
 SELECT SUM(ss.Sale_Amount) AS 'Total Revenue in Texas',
-		sl.StoreLocation AS 'Territory'
+		sl.StoreLocation AS 'Store'
 FROM store_sales ss
 JOIN store_locations sl
 ON ss.Store_ID = sl.StoreID
 WHERE sl.State = 'Texas'
 GROUP BY sl.StoreLocation
-ORDER BY COUNT(ss.Sale_Amount) DESC;
+ORDER BY SUM(ss.Sale_Amount) DESC;
 
 
 -- What is your recommendation for where to focus sales attention in the next quarter?
